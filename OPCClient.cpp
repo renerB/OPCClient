@@ -85,7 +85,6 @@ void main(void)
 	OPCHANDLE hServerGroup; // server handle to the group
 	OPCHANDLE hServerItem;  // server handle to the item
 
-	int i;
 	char buf[100];
 
 	// Have to be done before using microsoft COM library:
@@ -109,15 +108,19 @@ void main(void)
 	AddTheItem(pIOPCItemMgt, hServerItem);
 
 	//Synchronous read of the device´s item value.
-	VARIANT varValue[3]; //to store the read value
-	VariantInit(varValue);
-	varValue[0].vt = VT_R4;
-	varValue[1].vt = VT_R4;
-	varValue[2].vt = VT_R4;
-	varValue[0].fltVal = 0.0;
-	varValue[1].fltVal = 0.0;
-	varValue[2].fltVal = 0.0;
-	VarToStr(varValue[0], buf);
+	VARIANT PreHeatingSP; //to store the read value
+	VARIANT HeatingSP; //to store the read value
+	VARIANT SoakSP; //to store the read value
+	VariantInit(&PreHeatingSP);
+	VariantInit(&HeatingSP);
+	VariantInit(&SoakSP);
+	PreHeatingSP.vt = VT_R8;
+	HeatingSP.vt = VT_R4;
+	SoakSP.vt = VT_I4;
+	PreHeatingSP.dblVal = 0.0;
+	HeatingSP.fltVal = 0.0;
+	SoakSP.intVal = 0;
+	VarToStr(SoakSP, buf);
 	
 		// Enters a message pump in order to process the server´s callback
 	// notifications. This is needed because the CoInitialize() function
@@ -142,7 +145,6 @@ void main(void)
 	//
 	int bRet;
 	MSG msg;
-	DWORD ticks1, ticks2;
 	    
 	// Establish a callback asynchronous read by means of the IOPCDaraCallback
 	// (OPC DA 2.0) method. We first instantiate a new SOCDataCallback object and
@@ -173,7 +175,7 @@ void main(void)
 		KeyboardEntry = _getch();
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
 			printf("Teclado \n \n");
-			WriteItem(pIOPCItemMgt, varValue);
+			WriteItem(pIOPCItemMgt, &PreHeatingSP);
 			Sleep(1000);
 		}
 	}
@@ -423,15 +425,16 @@ void WriteItem(IUnknown* pGroupIUnknown, VARIANT* varValue)
 {
 	// value of the item:
 	OPCITEMSTATE* pValue = NULL;
+	DWORD dwCount = 1;
 
 	//get a pointer to the IOPCSyncIOInterface:
 	IOPCSyncIO* pIOPCSyncIO;
 	pGroupIUnknown->QueryInterface(__uuidof(pIOPCSyncIO), (void**)&pIOPCSyncIO);
 
 	// read the item value from the device:
-	OPCHANDLE hServerItems[] = { PRE_HEATING_SETPOINT.hServerItem, HEATING_SETPOINT.hServerItem, SOAK_SETPOINT.hServerItem };
+	OPCHANDLE hServerItems = PRE_HEATING_SETPOINT.hServerItem;
 	HRESULT* pErrors = NULL; //to store error code(s)
-	HRESULT hr = pIOPCSyncIO->Write(3, hServerItems, varValue, &pErrors);
+	HRESULT hr = pIOPCSyncIO->Write(dwCount, &hServerItems, varValue, &pErrors);
 	_com_error err(hr);
 	LPCTSTR errMsg = err.ErrorMessage();
 	_ASSERT(!hr);
