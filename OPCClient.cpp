@@ -65,14 +65,10 @@ OPCItem FLOW = { "Vazão", "Square Waves.Real4", L"Square Waves.Real4", 3, 0 };
 OPCItem PRE_HEATING_SETPOINT = { "Setpoint pré aquecimento", "Bucket Brigade.Real8", L"Bucket Brigade.Real8", 4, 0 };
 OPCItem HEATING_SETPOINT = { "Setpoint aquecimento", "Bucket Brigade.Real4", L"Bucket Brigade.Real4", 5, 0 };
 OPCItem SOAK_SETPOINT = { "Setpoint encharque", "Bucket Brigade.Int4", L"Bucket Brigade.Int4", 6, 0 };
-wchar_t PRE_HEATING_ID[]=L"Random.Real4";
-wchar_t HEATING_ID[] = L"Saw-toothed Waves.Real4";
-wchar_t SOAK_ID[] = L"Triangle Waves.Real4";
-wchar_t FLOW_ID[] = L"Square Waves.Real4";
-wchar_t PRE_HEATING_SETPOINT_ID[] = L"Bucket Brigade.Real8";
-wchar_t HEATING_SETPOINT_ID[] = L"Bucket Brigade.Real4";
-wchar_t SOAK_SETPOINT_ID[] = L"Bucket Brigade.Int4";
-extern wchar_t* ITEM_IDS[7] = {PRE_HEATING_ID, HEATING_ID, SOAK_ID, FLOW_ID, PRE_HEATING_SETPOINT_ID, HEATING_SETPOINT_ID, SOAK_SETPOINT_ID };
+VARIANT PreHeatingSP; //to store the read value
+VARIANT HeatingSP; //to store the read value
+VARIANT SoakSP; //to store the read value
+
 
 //////////////////////////////////////////////////////////////////////
 // Read the value of an item on an OPC server. 
@@ -103,24 +99,20 @@ void main(void)
 	// Add the OPC item. First we have to convert from wchar_t* to char*
 	// in order to print the item name in the console.
     size_t m;
-	wcstombs_s(&m, buf, 100, HEATING_ID, _TRUNCATE);
-	printf("Adding the item %s to the group...\n", buf);
+	printf("Adding the items to the group...\n");
 	AddTheItem(pIOPCItemMgt, hServerItem);
 
 	//Synchronous read of the device´s item value.
-	VARIANT PreHeatingSP; //to store the read value
-	VARIANT HeatingSP; //to store the read value
-	VARIANT SoakSP; //to store the read value
+	
 	VariantInit(&PreHeatingSP);
 	VariantInit(&HeatingSP);
 	VariantInit(&SoakSP);
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
 	SoakSP.vt = VT_I4;
-	PreHeatingSP.dblVal = 0.0;
-	HeatingSP.fltVal = 0.0;
-	SoakSP.intVal = 0;
-	VarToStr(SoakSP, buf);
+	PreHeatingSP.dblVal = 1.0;
+	HeatingSP.fltVal = 2.0;
+	SoakSP.intVal = 3;
 	
 		// Enters a message pump in order to process the server´s callback
 	// notifications. This is needed because the CoInitialize() function
@@ -174,8 +166,8 @@ void main(void)
 	while (true) {
 		KeyboardEntry = _getch();
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
-			printf("Teclado \n \n");
-			WriteItem(pIOPCItemMgt, &PreHeatingSP);
+			printf("Setpoints atualizados \n \n");
+			WriteItem(pIOPCItemMgt);
 			Sleep(1000);
 		}
 	}
@@ -370,12 +362,12 @@ void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem)
 	// Server handle for the added item:
 	hServerItem = pAddResult[0].hServer;
 	PRE_HEATING.hServerItem = pAddResult[0].hServer;
-	HEATING.hServerItem = pAddResult[0].hServer;
-	SOAK.hServerItem = pAddResult[0].hServer;
-	FLOW.hServerItem = pAddResult[0].hServer;
-	PRE_HEATING_SETPOINT.hServerItem = pAddResult[0].hServer;
-	HEATING_SETPOINT.hServerItem = pAddResult[0].hServer;
-	SOAK_SETPOINT.hServerItem = pAddResult[0].hServer;
+	HEATING.hServerItem = pAddResult[1].hServer;
+	SOAK.hServerItem = pAddResult[2].hServer;
+	FLOW.hServerItem = pAddResult[3].hServer;
+	PRE_HEATING_SETPOINT.hServerItem = pAddResult[4].hServer;
+	HEATING_SETPOINT.hServerItem = pAddResult[5].hServer;
+	SOAK_SETPOINT.hServerItem = pAddResult[6].hServer;
 
 
 	// release memory allocated by the server:
@@ -421,32 +413,28 @@ void ReadItem(IUnknown* pGroupIUnknown, OPCHANDLE hServerItem, VARIANT& varValue
 	pIOPCSyncIO->Release();
 }
 
-void WriteItem(IUnknown* pGroupIUnknown, VARIANT* varValue)
+void WriteItem(IUnknown* pGroupIUnknown)
 {
 	// value of the item:
-	OPCITEMSTATE* pValue = NULL;
-	DWORD dwCount = 1;
+	DWORD dwCount = 3;
 
 	//get a pointer to the IOPCSyncIOInterface:
 	IOPCSyncIO* pIOPCSyncIO;
 	pGroupIUnknown->QueryInterface(__uuidof(pIOPCSyncIO), (void**)&pIOPCSyncIO);
 
 	// read the item value from the device:
-	OPCHANDLE hServerItems = PRE_HEATING_SETPOINT.hServerItem;
+	OPCHANDLE hServerItems[] = { PRE_HEATING_SETPOINT.hServerItem, HEATING_SETPOINT.hServerItem, SOAK_SETPOINT.hServerItem };
+	VARIANT SetPoints[] = { PreHeatingSP, HeatingSP, SoakSP };
 	HRESULT* pErrors = NULL; //to store error code(s)
-	HRESULT hr = pIOPCSyncIO->Write(dwCount, &hServerItems, varValue, &pErrors);
+	HRESULT hr = pIOPCSyncIO->Write(dwCount, hServerItems, SetPoints, &pErrors);
 	_com_error err(hr);
 	LPCTSTR errMsg = err.ErrorMessage();
 	_ASSERT(!hr);
-	_ASSERT(pValue != NULL);
 
 
 	//Release memeory allocated by the OPC server:
 	CoTaskMemFree(pErrors);
 	pErrors = NULL;
-
-	CoTaskMemFree(pValue);
-	pValue = NULL;
 
 	// release the reference to the IOPCSyncIO interface:
 	pIOPCSyncIO->Release();
