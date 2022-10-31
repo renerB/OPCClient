@@ -58,17 +58,17 @@ struct OPCItem {
 	OPCHANDLE hServerItem;
 };
 
-OPCItem PRE_HEATING = { "Temperatura pré aquecimento", "Random.Real4", L"Random.Real4", 0, 0 };
-OPCItem HEATING = { "Temperatura aquecimento", "Saw-toothed Waves.Real4", L"Saw-toothed Waves.Real4", 1, 0 };
-OPCItem SOAK = { "Temperatura encharque", "Triangle Waves.Real4", L"Triangle Waves.Real4", 2, 0 };
-OPCItem FLOW = { "Vazão", "Square Waves.Real4", L"Square Waves.Real4", 3, 0 };
-OPCItem PRE_HEATING_SETPOINT = { "Setpoint pré aquecimento", "Bucket Brigade.Real8", L"Bucket Brigade.Real8", 4, 0 };
-OPCItem HEATING_SETPOINT = { "Setpoint aquecimento", "Bucket Brigade.Real4", L"Bucket Brigade.Real4", 5, 0 };
-OPCItem SOAK_SETPOINT = { "Setpoint encharque", "Bucket Brigade.Int4", L"Bucket Brigade.Int4", 6, 0 };
+OPCItem PRE_HEATING = { "Temperatura pré aquecimento", "Random.Real4", L"Random.Real4", 1, 0 };
+OPCItem HEATING = { "Temperatura aquecimento", "Saw-toothed Waves.Real4", L"Saw-toothed Waves.Real4", 2, 0 };
+OPCItem SOAK = { "Temperatura encharque", "Triangle Waves.Real4", L"Triangle Waves.Real4", 3, 0 };
+OPCItem FLOW = { "Vazão", "Square Waves.Real4", L"Square Waves.Real4", 4, 0 };
+OPCItem PRE_HEATING_SETPOINT = { "Setpoint pré aquecimento", "Bucket Brigade.Real8", L"Bucket Brigade.Real8", 5, 0 };
+OPCItem HEATING_SETPOINT = { "Setpoint aquecimento", "Bucket Brigade.Real4", L"Bucket Brigade.Real4", 6, 0 };
+OPCItem SOAK_SETPOINT = { "Setpoint encharque", "Bucket Brigade.Int4", L"Bucket Brigade.Int4", 7, 0 };
+
 VARIANT PreHeatingSP; //to store the read value
 VARIANT HeatingSP; //to store the read value
 VARIANT SoakSP; //to store the read value
-
 
 //////////////////////////////////////////////////////////////////////
 // Read the value of an item on an OPC server. 
@@ -104,9 +104,9 @@ void main(void)
 
 	//Synchronous read of the device´s item value.
 	
-	VariantInit(&PreHeatingSP);
-	VariantInit(&HeatingSP);
-	VariantInit(&SoakSP);
+	//VariantInit(&PreHeatingSP);
+	//VariantInit(&HeatingSP);
+	//VariantInit(&SoakSP);
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
 	SoakSP.vt = VT_I4;
@@ -275,7 +275,7 @@ void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem)
 	HRESULT hr;
 
 	// Array of items to add:
-	OPCITEMDEF ItemArray[7] =
+	OPCITEMDEF ItemArray[] =
 	{{
 		/*szAccessPath*/ L"",
 		/*szItemID*/ PRE_HEATING.ID,
@@ -353,7 +353,7 @@ void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem)
 	HRESULT* pErrors = NULL;
 
 	// Add an Item to the previous Group:
-	hr = pIOPCItemMgt->AddItems(6, ItemArray, &pAddResult, &pErrors);
+	hr = pIOPCItemMgt->AddItems(7, ItemArray, &pAddResult, &pErrors);
 	if (hr != S_OK){
 		printf("Failed call to AddItems function. Error code = %x\n", hr);
 		exit(0);

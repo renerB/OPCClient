@@ -34,4 +34,5 @@ void WriteItem(IUnknown* pGroupIUnknown);
 void RemoveItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE hServerItem);
 void RemoveGroup(IOPCServer* pIOPCServer, OPCHANDLE hServerGroup);
 void ManageNotifications(int bRet, MSG msg);
+void IdentifyItem(int item);
 #endif // SIMPLE_OPC_CLIENT_H not defined

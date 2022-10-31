@@ -234,26 +234,8 @@ void CancelDataCallback(IConnectionPoint *pIConnectionPoint,  DWORD dwCookie)
 }
 
 void IdentifyItem(int item) {
-	//extern wchar_t* ITEM_IDS[];
-	//std::wstring ID(ITEM_IDS[item]);
-	//std::wcout << "Tag: " << ID << " ";
+	char* PVs[] = { "Temperatura pré aquecimento ", "Temperatura aquecimento ", "Temperatura encharque ", "Vazão ", "Setpoint pré aquecimento ", "Setpoint aquecimento ", "Setpoint encharque " };
 	setlocale(LC_ALL, "Portuguese");
-	switch (item)
-	{
-	case 0:
-		printf("Temperatura pré aquecimento: ");
-		break;
-	case 1:
-		printf("Temperatura aquecimento: ");
-		break;
-	case 2:
-		printf("Temperatura encharque: ");
-		break;
-	case 3:
-		printf("Vazão: ");
-		break;
-	default:
-		printf("Unknown item: ");
-		break;
-	}
+	printf(PVs[(item-1)]);
 }
+
