@@ -29,10 +29,8 @@ IOPCServer *InstantiateServer(wchar_t ServerName[]);
 void AddTheGroup(IOPCServer* pIOPCServer, IOPCItemMgt* &pIOPCItemMgt, 
 				 OPCHANDLE& hServerGroup);
 void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem);
-void ReadItem(IUnknown* pGroupIUnknown, OPCHANDLE hServerItem, VARIANT& varValue);
 void WriteItem(IUnknown* pGroupIUnknown);
 void RemoveItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE hServerItem);
 void RemoveGroup(IOPCServer* pIOPCServer, OPCHANDLE hServerGroup);
 void ManageNotifications(int bRet, MSG msg);
-void IdentifyItem(int item);
 #endif // SIMPLE_OPC_CLIENT_H not defined

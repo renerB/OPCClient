@@ -85,24 +85,29 @@ void main(void)
 	OPCHANDLE hServerItem;  // server handle to the item
 
 	char buf[100];
+	char address[30] = { NULL };
+
+	setlocale(LC_ALL, "Portuguese");
+	printf("Digite o endereço IP do computador de processo:\n");
+	scanf("%s", &address);
 
 	// Have to be done before using microsoft COM library:
-	printf("Initializing the COM environment...\n");
+	printf("Inicializando ambiente COM...\n");
 	CoInitializeEx(NULL, COINIT_MULTITHREADED);
 
 	// Let's instantiante the IOPCServer interface and get a pointer of it:
-	printf("Instantiating the MATRIKON OPC Server for Simulation...\n");
+	printf("Instanciando simulador de simulação OPC Matrikon...\n");
 	pIOPCServer = InstantiateServer(OPC_SERVER_NAME);
 	
 	// Add the OPC group the OPC server and get an handle to the IOPCItemMgt
 	//interface:
-	printf("Adding a group in the INACTIVE state for the moment...\n");
+	printf("Adicionando grupo...\n");
 	AddTheGroup(pIOPCServer, pIOPCItemMgt, hServerGroup);
 
 	// Add the OPC item. First we have to convert from wchar_t* to char*
 	// in order to print the item name in the console.
     size_t m;
-	printf("Adding the items to the group...\n");
+	printf("Adicionado itens ao grupo...\n");
 	AddTheItem(pIOPCItemMgt, hServerItem);
 
 	//Synchronous read of the device´s item value.
@@ -148,21 +153,20 @@ void main(void)
 	pSOCDataCallback->AddRef();
 
 
-	printf("Setting up the IConnectionPoint callback connection...\n");
+	printf("Estabelecendo conexão por IConnectionPoint callback...\n");
 	SetDataCallback(pIOPCItemMgt, pSOCDataCallback, pIConnectionPoint, &dwCookie);
 
 	// Change the group to the ACTIVE state so that we can receive the
 	// server´s callback notification
-	printf("Changing the group state to ACTIVE...\n");
+	printf("Alterando o estado do grupo para ativo...\n");
     SetGroupActive(pIOPCItemMgt); 
 
 	// Enter again a message pump in order to process the server´s callback
 	// notifications, for the same reason explained before.
 		
-	printf("Waiting for IOPCDataCallback notifications...\n");
-	char* address = "127.0.0.1";
-	bool key = false;
-
+	printf("Aguardando notificações IOPCDataCallback...\n");
+	int key = 0;
+	
 	std::thread t1(ManageNotifications, bRet, msg);
 	std::thread t2(SocketMainThread, address, &pSOCDataCallback->PreHeatingValue, &pSOCDataCallback->HeatingValue, &pSOCDataCallback->SoakValue, &pSOCDataCallback->FlowValue, &pSOCDataCallback->PreHeatingSPValue, &pSOCDataCallback->HeatingSPValue, &pSOCDataCallback->SoakSPValue, &key);
 	
@@ -170,8 +174,8 @@ void main(void)
 	while (true) {
 		KeyboardEntry = _getch();
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
-			key = true;
-			while (key);
+			key = 1;
+			while (key == 1);
 			WriteItem(pIOPCItemMgt);
 			PreHeatingSP.dblVal = pSOCDataCallback->PreHeatingSPValue;
 			HeatingSP.fltVal = pSOCDataCallback->HeatingSPValue;
@@ -179,29 +183,36 @@ void main(void)
 			printf("\n\nSetpoints atualizados \n \n");
 			Sleep(1000);
 		}
+		if (KeyboardEntry == 'f' || KeyboardEntry == 'F') {
+			printf("\n\nFinalizando aplicação... \n \n");
+			key = 2;
+			break;
+		}
 	}
+	
 	t1.join();
+	t2.join();
 	// Cancel the callback and release its reference
-	printf("Cancelling the IOPCDataCallback notifications...\n");
+	printf("Cancelando notificações IOPCDataCallback...\n");
     CancelDataCallback(pIConnectionPoint, dwCookie);
 	//pIConnectionPoint->Release();
 	pSOCDataCallback->Release();
 
 	// Remove the OPC item:
-	printf("Removing the OPC item...\n");
+	printf("Removendo itens OPC...\n");
 	RemoveItem(pIOPCItemMgt, hServerItem);
 
 	// Remove the OPC group:
-	printf("Removing the OPC group object...\n");
+	printf("Removendo o objeto do grupo OPC...\n");
     pIOPCItemMgt->Release();
 	RemoveGroup(pIOPCServer, hServerGroup);
 
 	// release the interface references:
-	printf("Removing the OPC server object...\n");
+	printf("Removendo o objeto do servidor OPC...\n");
 	pIOPCServer->Release();
 
 	//close the COM library:
-	printf ("Releasing the COM environment...\n");
+	printf ("Liberando ambiente COM...\n");
 	CoUninitialize();
 }
 
@@ -389,39 +400,6 @@ void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem)
 	pErrors = NULL;
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// Read from device the value of the item having the "hServerItem" server 
-// handle and belonging to the group whose one interface is pointed by
-// pGroupIUnknown. The value is put in varValue. 
-//
-void ReadItem(IUnknown* pGroupIUnknown, OPCHANDLE hServerItem, VARIANT& varValue)
-{
-	// value of the item:
-	OPCITEMSTATE* pValue = NULL;
-
-	//get a pointer to the IOPCSyncIOInterface:
-	IOPCSyncIO* pIOPCSyncIO;
-	pGroupIUnknown->QueryInterface(__uuidof(pIOPCSyncIO), (void**) &pIOPCSyncIO);
-
-	// read the item value from the device:
-	HRESULT* pErrors = NULL; //to store error code(s)
-	HRESULT hr = pIOPCSyncIO->Read(OPC_DS_DEVICE, 1, &hServerItem, &pValue, &pErrors);
-	_ASSERT(!hr);
-	_ASSERT(pValue!=NULL);
-
-	varValue = pValue[0].vDataValue;
-
-	//Release memeory allocated by the OPC server:
-	CoTaskMemFree(pErrors);
-	pErrors = NULL;
-
-	CoTaskMemFree(pValue);
-	pValue = NULL;
-
-	// release the reference to the IOPCSyncIO interface:
-	pIOPCSyncIO->Release();
-}
-
 void WriteItem(IUnknown* pGroupIUnknown)
 {
 	// value of the item:
@@ -491,6 +469,4 @@ void ManageNotifications(int bRet, MSG msg) {
 		printf("Failed to get windows message! Error code = %d\n", GetLastError());
 		exit(0);
 	}
-	//TranslateMessage(&msg); // This call is not really needed ...
-	//DispatchMessage(&msg);  // ... but this one is!
 }

@@ -54,7 +54,7 @@ void sendDados_thread(SOCKET sock, char buf[50], int* nSeq, float* TempPreAq, fl
 
 }
 
-void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* TempEnch, float* Vazao, float* SetTempPreAq, float* SetTempAq, int* SetTempEnch, bool* key) {
+void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* TempEnch, float* Vazao, float* SetTempPreAq, float* SetTempAq, int* SetTempEnch, int* key) {
 
 	// Variáveis de conexão:
 	WSADATA wsaData;
@@ -105,7 +105,7 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 		exit(0);
 	}
 
-	for (;;) {
+	while(true) {
 
 		// Criação de Thread de envio sincrono:
 		sendDados_thread(sock, buf, &nSeq, TempPreAq, TempAq, TempEnch, Vazao, msgDados, msgAck, &status);
@@ -113,7 +113,7 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 		// Sincronização de threads:
 		//sendDados.join(); // Sistema interrompe para realização de thread
 
-		if (*key) {
+		if (*key == 1) {
 			memset(msgReqSet, 0, TamReqSet + 1);
 			SeqMtx.lock();
 			sprintf(msgReqSet, "%06d;1100", nSeq);
@@ -152,7 +152,12 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 			*SetTempAq = atof(buf2);
 			*SetTempEnch = atoi(buf3);
 
-			*key = false;
+			*key = 0;
+		}
+		else if (*key == 2)
+		{
+			closesocket(sock);
+			exit(0);
 		}
 
 	}
