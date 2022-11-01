@@ -104,9 +104,6 @@ void main(void)
 
 	//Synchronous read of the device´s item value.
 	
-	//VariantInit(&PreHeatingSP);
-	//VariantInit(&HeatingSP);
-	//VariantInit(&SoakSP);
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
 	SoakSP.vt = VT_I4;
