@@ -8,6 +8,8 @@
 //
 
 #include <stdio.h>
+#include <locale.h>
+
 #include "SOCDataCallback.h"
 #include "SOCWrapperFunctions.h"
 
@@ -129,7 +131,7 @@ HRESULT STDMETHODCALLTYPE SOCDataCallback::OnDataChange(
 		status = VarToStr(pvValues[dwItem], buffer);
 		if (status){
 			item = phClientItems[dwItem];
-			IdentifyItem(item);
+			IdentifyItem(item, buffer, this);
 			printf("Valor = %s", buffer);
 			quality = pwQualities [dwItem] & OPC_QUALITY_MASK;
 			if (quality == OPC_QUALITY_GOOD)
@@ -191,4 +193,37 @@ HRESULT STDMETHODCALLTYPE SOCDataCallback::OnCancelComplete(
 	OPCHANDLE hGroup)
 {
 	return(S_OK);
+}
+
+void IdentifyItem(int item, char* buffer, SOCDataCallback* SDC) {
+	char* PVs[] = { "Temperatura pré aquecimento ", "Temperatura aquecimento ", "Temperatura encharque ", "Vazão ", "Setpoint pré aquecimento ", "Setpoint aquecimento ", "Setpoint encharque " };
+	setlocale(LC_ALL, "Portuguese");
+	printf(PVs[(item - 1)]);
+
+	switch (item)
+	{
+	case 1:
+		SDC->PreHeatingValue = atof(buffer);
+		break;
+	case 2:
+		SDC->HeatingValue = atof(buffer);
+		break;
+	case 3:
+		SDC->SoakValue = atof(buffer);
+		break;
+	case 4:
+		SDC->FlowValue = atof(buffer);
+		break;
+	case 5:
+		SDC->PreHeatingSPValue = atof(buffer);
+		break;
+	case 6:
+		SDC->HeatingSPValue = atof(buffer);
+		break;
+	case 7:
+		SDC->SoakSPValue = atoi(buffer);
+		break;
+	default:
+		break;
+	}
 }

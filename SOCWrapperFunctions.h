@@ -19,4 +19,4 @@ bool VarToStr (VARIANT pvar, char *buffer);
 void SetDataCallback(IUnknown* pGroupIUnknown, IOPCDataCallback* pSOCDataCallback,
 					 IConnectionPoint* &pIConnectionPoint, DWORD *pdwCookie);
 void CancelDataCallback(IConnectionPoint *pIConnectionPoint,  DWORD dwCookie);
-void IdentifyItem(int item);
+void IdentifyItem(int item, char buffer);

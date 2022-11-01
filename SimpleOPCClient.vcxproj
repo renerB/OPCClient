@@ -65,6 +65,7 @@
       <SubSystem>Console</SubSystem>
       <TargetMachine>MachineX86</TargetMachine>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <AdditionalDependencies>Ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -92,9 +93,11 @@
     <ClCompile Include="OPCClient.cpp" />
     <ClCompile Include="SOCAdviseSink.cpp" />
     <ClCompile Include="SOCDataCallback.cpp" />
+    <ClCompile Include="Socket.cpp" />
     <ClCompile Include="SOCWrapperlFunctions.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Socket.h" />
     <ClInclude Include="opcda.h" />
     <ClInclude Include="opcerror.h" />
     <ClInclude Include="OPCClient.h" />

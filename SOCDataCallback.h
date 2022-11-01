@@ -19,6 +19,13 @@ class SOCDataCallback : public IOPCDataCallback
 	public:
 		SOCDataCallback ();
 		~SOCDataCallback ();
+		float PreHeatingValue;
+		float HeatingValue;
+		float SoakValue;
+		float FlowValue;
+		float PreHeatingSPValue;
+		float HeatingSPValue;
+		int SoakSPValue;
 
 		// IUnknown Methods
 		HRESULT STDMETHODCALLTYPE QueryInterface (REFIID iid, LPVOID *ppv);
@@ -65,6 +72,8 @@ class SOCDataCallback : public IOPCDataCallback
 	private:
 		DWORD m_cnRef;
 	};
+
+void IdentifyItem(int item, char* buffer, SOCDataCallback* SDC);
 
 
 #endif // _SOCDATACALLBACK_H

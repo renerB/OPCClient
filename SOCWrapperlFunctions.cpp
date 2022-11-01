@@ -233,9 +233,3 @@ void CancelDataCallback(IConnectionPoint *pIConnectionPoint,  DWORD dwCookie)
 	return; 
 }
 
-void IdentifyItem(int item) {
-	char* PVs[] = { "Temperatura pré aquecimento ", "Temperatura aquecimento ", "Temperatura encharque ", "Vazão ", "Setpoint pré aquecimento ", "Setpoint aquecimento ", "Setpoint encharque " };
-	setlocale(LC_ALL, "Portuguese");
-	printf(PVs[(item-1)]);
-}
-

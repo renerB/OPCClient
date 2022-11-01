@@ -28,6 +28,7 @@
 #include <conio.h>
 #include <variant>
 #include <comdef.h>
+#include <mutex>
 
 #include "opcda.h"
 #include "opcerror.h"
@@ -35,6 +36,7 @@
 #include "SOCAdviseSink.h"
 #include "SOCDataCallback.h"
 #include "SOCWrapperFunctions.h"
+#include "Socket.h"
 
 using namespace std;
 
@@ -69,6 +71,7 @@ OPCItem SOAK_SETPOINT = { "Setpoint encharque", "Bucket Brigade.Int4", L"Bucket 
 VARIANT PreHeatingSP; //to store the read value
 VARIANT HeatingSP; //to store the read value
 VARIANT SoakSP; //to store the read value
+
 
 //////////////////////////////////////////////////////////////////////
 // Read the value of an item on an OPC server. 
@@ -107,9 +110,9 @@ void main(void)
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
 	SoakSP.vt = VT_I4;
-	PreHeatingSP.dblVal = 1.0;
-	HeatingSP.fltVal = 2.0;
-	SoakSP.intVal = 3;
+	PreHeatingSP.dblVal = 0.0;
+	HeatingSP.fltVal = 0.0;
+	SoakSP.intVal = 0;
 	
 		// Enters a message pump in order to process the server´s callback
 	// notifications. This is needed because the CoInitialize() function
@@ -144,6 +147,7 @@ void main(void)
 	SOCDataCallback* pSOCDataCallback = new SOCDataCallback();
 	pSOCDataCallback->AddRef();
 
+
 	printf("Setting up the IConnectionPoint callback connection...\n");
 	SetDataCallback(pIOPCItemMgt, pSOCDataCallback, pIConnectionPoint, &dwCookie);
 
@@ -156,15 +160,23 @@ void main(void)
 	// notifications, for the same reason explained before.
 		
 	printf("Waiting for IOPCDataCallback notifications...\n");
-	
+	char* address = "127.0.0.1";
+	bool key = false;
+
 	std::thread t1(ManageNotifications, bRet, msg);
+	std::thread t2(SocketMainThread, address, &pSOCDataCallback->PreHeatingValue, &pSOCDataCallback->HeatingValue, &pSOCDataCallback->SoakValue, &pSOCDataCallback->FlowValue, &pSOCDataCallback->PreHeatingSPValue, &pSOCDataCallback->HeatingSPValue, &pSOCDataCallback->SoakSPValue, &key);
 	
 	char KeyboardEntry = NULL;
 	while (true) {
 		KeyboardEntry = _getch();
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
-			printf("Setpoints atualizados \n \n");
+			key = true;
+			while (key);
 			WriteItem(pIOPCItemMgt);
+			PreHeatingSP.dblVal = pSOCDataCallback->PreHeatingSPValue;
+			HeatingSP.fltVal = pSOCDataCallback->HeatingSPValue;
+			SoakSP.intVal = pSOCDataCallback->SoakSPValue;
+			printf("\n\nSetpoints atualizados \n \n");
 			Sleep(1000);
 		}
 	}
