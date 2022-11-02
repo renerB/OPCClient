@@ -93,7 +93,7 @@ void main(void)
 
 	// Have to be done before using microsoft COM library:
 	printf("Inicializando ambiente COM...\n");
-	CoInitializeEx(NULL, COINIT_MULTITHREADED);
+	CoInitializeEx(NULL, COINIT_MULTITHREADED); // Enables multithread
 
 	// Let's instantiante the IOPCServer interface and get a pointer of it:
 	printf("Instanciando simulador de simulação OPC Matrikon...\n");
@@ -104,13 +104,10 @@ void main(void)
 	printf("Adicionando grupo...\n");
 	AddTheGroup(pIOPCServer, pIOPCItemMgt, hServerGroup);
 
-	// Add the OPC item. First we have to convert from wchar_t* to char*
-	// in order to print the item name in the console.
+	// Add the OPC items
     size_t m;
 	printf("Adicionado itens ao grupo...\n");
 	AddTheItem(pIOPCItemMgt, hServerItem);
-
-	//Synchronous read of the device´s item value.
 	
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
@@ -119,27 +116,6 @@ void main(void)
 	HeatingSP.fltVal = 0.0;
 	SoakSP.intVal = 0;
 	
-		// Enters a message pump in order to process the server´s callback
-	// notifications. This is needed because the CoInitialize() function
-	// forces the COM threading model to STA (Single Threaded Apartment),
-	// in which, according to the MSDN, "all method calls to a COM object
-	// (...) are synchronized with the windows message queue for the
-	// single-threaded apartment's thread." So, even being a console
-	// application, the OPC client must process messages (which in this case
-	// are only useless WM_USER [0x0400] messages) in order to process
-	// incoming callbacks from a OPC server.
-	//
-	// A better alternative could be to use the CoInitializeEx() function,
-	// which allows one to  specifiy the desired COM threading model;
-	// in particular, calling
-	//        CoInitializeEx(NULL, COINIT_MULTITHREADED)
-	// sets the model to MTA (MultiThreaded Apartments) in which a message
-	// loop is __not required__ since objects in this model are able to
-	// receive method calls from other threads at any time. However, in the
-	// MTA model the user is required to handle any aspects regarding
-	// concurrency, since asynchronous, multiple calls to the object methods
-	// can occur.
-	//
 	int bRet;
 	MSG msg;
 	    
@@ -176,10 +152,10 @@ void main(void)
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
 			key = 1;
 			while (key == 1);
-			WriteItem(pIOPCItemMgt);
 			PreHeatingSP.dblVal = pSOCDataCallback->PreHeatingSPValue;
 			HeatingSP.fltVal = pSOCDataCallback->HeatingSPValue;
 			SoakSP.intVal = pSOCDataCallback->SoakSPValue;
+			WriteItem(pIOPCItemMgt);
 			printf("\n\nSetpoints atualizados \n \n");
 			Sleep(1000);
 		}
