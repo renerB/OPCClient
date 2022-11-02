@@ -69,6 +69,7 @@ void sendDados_thread(SOCKET* sock, char* ipaddr, char buf[50], int* nSeq, float
 			sprintf(msgDados, "%06d;0000;%05.1f;%05.1f;%05.1f;%05.1f", *nSeq, *TempPreAq, *TempAq, *TempEnch, *Vazao);
 			*status = send(*sock, msgDados, TamMsgDados, 0);
 		}
+		printf("Enviando dados: %s \n\n", msgDados);
 
 	// Recebimento de confirmação:
 		memset(msgAck, 0, TamAck + 1);
@@ -79,8 +80,9 @@ void sendDados_thread(SOCKET* sock, char* ipaddr, char buf[50], int* nSeq, float
 			SeqMtx.unlock();
 		}
 		else {
+			printf("Recebendo dados: %s \n\n", msgAck);
 			buf = strtok(msgAck, ";");
-			// Falta msg de erro e confrmação dos bits do Ack
+
 			if (atoi(buf) != ((*nSeq) + 1)) {
 				printf("Erro de sequenciamento - ACK");
 			}
@@ -152,6 +154,7 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 				sprintf(msgReqSet, "%06d;1100", nSeq);
 				status = send(sock, msgReqSet, TamReqSet, 0);
 			}
+			printf("Requisitando setpoints: %s \n\n", msgReqSet);
 
 		// Recebimento de confirmação:
 			memset(msgSet, 0, TamMsgSet + 1);
@@ -162,8 +165,9 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 				SeqMtx.unlock();
 			}
 			else {
+				printf("Recebendo setpoints: %s \n\n", msgSet);
 				sscanf(msgSet, "%6d", &nSeq);
-				// Falta msg de erro e confrmação dos bits do Ack
+
 				nSeq++;
 				sprintf(msgAckSet, "%06d;0011", nSeq);
 				status = send(sock, msgAckSet, TamReqSet, 0);
@@ -173,6 +177,7 @@ void SocketMainThread(char* ipaddr, float* TempPreAq, float* TempAq, float* Temp
 					sprintf(msgAckSet, "%06d;0011", nSeq);
 					status = send(sock, msgAckSet, TamReqSet, 0);
 				}
+				printf("Enviando confirmação: %s \n\n", msgAckSet);
 				nSeq++;
 				SeqMtx.unlock();
 				char buf1[5];

@@ -1,25 +1,11 @@
-// Simple OPC Client
+// TP1 - Brener and Daniel
 //
-// This is a modified version of the "Simple OPC Client" originally
-// developed by Philippe Gras (CERN) for demonstrating the basic techniques
-// involved in the development of an OPC DA client.
+// This client is based on the Simple OPC Client project, with additional funtionalities regarding a integration with a socket client
 //
-// The modifications are the introduction of two C++ classes to allow the
-// the client to ask for callback notifications from the OPC server, and
-// the corresponding introduction of a message comsumption loop in the
-// main program to allow the client to process those notifications. The
-// C++ classes implement the OPC DA 1.0 IAdviseSink and the OPC DA 2.0
-// IOPCDataCallback client interfaces, and in turn were adapted from the
-// KEPWARE´s  OPC client sample code. A few wrapper functions to initiate
-// and to cancel the notifications were also developed.
 //
 // The original Simple OPC Client code can still be found (as of this date)
 // in
 //        http://pgras.home.cern.ch/pgras/OPCClientTutorial/
-//
-//
-// Luiz T. S. Mendes - DELT/UFMG - 15 Sept 2011
-// luizt at cpdee.ufmg.br
 //
 
 #include <atlbase.h>    // required for using the "_T" macro
@@ -43,8 +29,6 @@ using namespace std;
 #define OPC_SERVER_NAME L"Matrikon.OPC.Simulation.1"
 #define VT VT_R4
 
-
-//#define REMOTE_SERVER_NAME L"your_path"
 
 // Global variables
 
@@ -109,6 +93,7 @@ void main(void)
 	printf("Adicionado itens ao grupo...\n");
 	AddTheItem(pIOPCItemMgt, hServerItem);
 	
+	// Initializes all variants:
 	PreHeatingSP.vt = VT_R8;
 	HeatingSP.vt = VT_R4;
 	SoakSP.vt = VT_I4;
@@ -140,13 +125,16 @@ void main(void)
 	// Enter again a message pump in order to process the server´s callback
 	// notifications, for the same reason explained before.
 		
-	printf("Aguardando notificações IOPCDataCallback...\n");
+	printf("Aguardando notificações IOPCDataCallback...\n\n");
 	int key = 0;
 	
-	std::thread t1(ManageNotifications, bRet, msg);
+	std::thread t1(ManageNotifications, bRet, msg);	// Manages all notifications from DataCallback
+
+	// The following thread runs the socket client
 	std::thread t2(SocketMainThread, address, &pSOCDataCallback->PreHeatingValue, &pSOCDataCallback->HeatingValue, &pSOCDataCallback->SoakValue, &pSOCDataCallback->FlowValue, &pSOCDataCallback->PreHeatingSPValue, &pSOCDataCallback->HeatingSPValue, &pSOCDataCallback->SoakSPValue, &key);
 	
 	char KeyboardEntry = NULL;
+	// Loop handles keyboard entries and calls syncronous functions
 	while (true) {
 		KeyboardEntry = _getch();
 		if (KeyboardEntry == 's' || KeyboardEntry == 'S') {
@@ -376,6 +364,7 @@ void AddTheItem(IOPCItemMgt* pIOPCItemMgt, OPCHANDLE& hServerItem)
 	pErrors = NULL;
 }
 
+// Write values on OPC items syncronously 
 void WriteItem(IUnknown* pGroupIUnknown)
 {
 	// value of the item:
@@ -385,7 +374,7 @@ void WriteItem(IUnknown* pGroupIUnknown)
 	IOPCSyncIO* pIOPCSyncIO;
 	pGroupIUnknown->QueryInterface(__uuidof(pIOPCSyncIO), (void**)&pIOPCSyncIO);
 
-	// read the item value from the device:
+	// write the item value from the device:
 	OPCHANDLE hServerItems[] = { PRE_HEATING_SETPOINT.hServerItem, HEATING_SETPOINT.hServerItem, SOAK_SETPOINT.hServerItem };
 	VARIANT SetPoints[] = { PreHeatingSP, HeatingSP, SoakSP };
 	HRESULT* pErrors = NULL; //to store error code(s)

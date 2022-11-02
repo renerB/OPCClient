@@ -6,6 +6,7 @@
 //
 // Luiz T. S. Mendes - DELT/UFMG - 13 Sept 2011
 //
+// Additional changes were made to identify all OPC items that triggered a notification.
 
 #include <stdio.h>
 #include <locale.h>
@@ -150,7 +151,7 @@ HRESULT STDMETHODCALLTYPE SOCDataCallback::OnDataChange(
 			FileTimeToSystemTime(&lft, &st);
 			GetDateFormat(LOCALE_SYSTEM_DEFAULT, DATE_SHORTDATE, &st, NULL, szLocalDate, 255);
 			GetTimeFormat(LOCALE_SYSTEM_DEFAULT, 0, &st, NULL, szLocalTime, 255);
-			printf(" Horário: %s %s\n", szLocalDate, szLocalTime);
+			printf(" Horário: %s %s\n\n", szLocalDate, szLocalTime);
 		}
 		else printf ("IOPCDataCallback: Unsupported item type\n");
 	}
